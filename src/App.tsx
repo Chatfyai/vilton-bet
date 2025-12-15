@@ -11,6 +11,12 @@ function AppContent() {
     const [isAdmin, setIsAdmin] = useState(false)
     const [checkingRole, setCheckingRole] = useState(false)
 
+    const handleLogout = async () => {
+        setIsAdmin(false)
+        await signOut()
+        // Optional: window.location.reload() if deep clean is needed, but state update should suffice
+    }
+
     useEffect(() => {
         if (user) {
             checkUserRole()
@@ -64,7 +70,7 @@ function AppContent() {
                         <h1 className="text-2xl font-bold text-emerald-400">Vilton da Bet</h1>
                     </div>
                     <button
-                        onClick={() => signOut()}
+                        onClick={handleLogout}
                         className="text-sm bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-800 transition-colors"
                     >
                         Sair
@@ -83,8 +89,8 @@ function AppContent() {
                     <p className="text-gray-400 text-sm">Bem-vindo, {user.user_metadata.username || 'Apostador'}</p>
                 </div>
                 <button
-                    onClick={() => signOut()}
-                    className="text-sm text-gray-400 hover:text-white"
+                    onClick={handleLogout}
+                    className="text-sm text-gray-400 hover:text-white border border-gray-800 px-3 py-1 rounded hover:bg-gray-900 transition-colors"
                 >
                     Sair
                 </button>
