@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { Plus, Trophy, Users, PlayCircle, Timer } from 'lucide-react'
+import { Plus, Trophy, Users, PlayCircle, Timer, Trash2 } from 'lucide-react'
 
 interface Player {
     id: string
@@ -224,6 +224,33 @@ export function AdminDashboard() {
         } catch (error: any) {
             console.error('Erro ao finalizar:', error)
             alert('Erro ao finalizar: ' + (error.message || JSON.stringify(error)))
+        }
+    }
+
+    async function handleDeleteMatch(matchId: string) {
+        if (!window.confirm('Tem certeza? Isso apagará a partida e TODAS as apostas associadas a ela!')) return
+
+        try {
+            // 1. Delete associated bets first (due to foreign key constraints)
+            const { error: betsError } = await supabase
+                .from('bets')
+                .delete()
+                .eq('match_id', matchId)
+
+            if (betsError) throw betsError
+
+            // 2. Delete the match (Odds will cascade delete automatically)
+            const { error: matchError } = await supabase
+                .from('matches')
+                .delete()
+                .eq('id', matchId)
+
+            if (matchError) throw matchError
+
+            alert('Partida apagada com sucesso!')
+        } catch (error: any) {
+            console.error('Erro ao apagar:', error)
+            alert('Erro ao apagar: ' + (error.message || JSON.stringify(error)))
         }
     }
 
@@ -450,20 +477,34 @@ export function AdminDashboard() {
                         <div className="space-y-4">
                             {finishedMatches.map(match => (
                                 <div key={match.id} className="bg-gray-950/50 border border-gray-800 rounded-xl p-4 flex items-center justify-between opacity-75">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-500">
-                                            {match.game_type}
+                                    <div className="p-4 flex items-center justify-between gap-4 w-full">
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-gray-800 px-2 py-0.5 rounded text-xs text-gray-400">{match.game_type}</span>
+                                                    <span className="bg-gray-800 px-2 py-0.5 rounded text-xs text-gray-400">{new Date(match.scheduled_at).toLocaleDateString()}</span>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-6 w-6 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 -mr-2 p-0"
+                                                    onClick={() => handleDeleteMatch(match.id)}
+                                                    title="Apagar Jogo"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-white font-medium">{match.player_a.name}</span>
+                                                <span className="bg-gray-800 px-2 py-1 rounded text-white font-bold">{match.score_a}</span>
+                                                <span className="text-gray-600 text-xs">vs</span>
+                                                <span className="bg-gray-800 px-2 py-1 rounded text-white font-bold">{match.score_b}</span>
+                                                <span className="text-white font-medium">{match.player_b.name}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-white font-medium">{match.player_a.name}</span>
-                                            <span className="bg-gray-800 px-2 py-1 rounded text-white font-bold">{match.score_a}</span>
-                                            <span className="text-gray-600 text-xs">vs</span>
-                                            <span className="bg-gray-800 px-2 py-1 rounded text-white font-bold">{match.score_b}</span>
-                                            <span className="text-white font-medium">{match.player_b.name}</span>
+                                        <div className="text-xs text-green-500 font-bold border border-green-900 bg-green-900/10 px-2 py-1 ml-4 rounded">
+                                            FINALIZADO
                                         </div>
-                                    </div>
-                                    <div className="text-xs text-green-500 font-bold border border-green-900 bg-green-900/10 px-2 py-1 rounded">
-                                        FINALIZADO
                                     </div>
                                 </div>
                             ))}
