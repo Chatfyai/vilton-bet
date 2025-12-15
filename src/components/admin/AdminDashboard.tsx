@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { Plus, Trophy, Users, CheckCircle, PlayCircle, Timer } from 'lucide-react'
+import { Plus, Trophy, Users, PlayCircle, Timer } from 'lucide-react'
 
 interface Player {
     id: string
